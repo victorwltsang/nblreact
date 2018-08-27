@@ -1,19 +1,22 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
+import Modal from './components/UI/Modal/Modal';
 
 class App extends Component {
 
   state = {
     events: null,
-    dataRoute: 'https://nblreact.wpengine.com/wp-json/acf/v3/event'
+    dataRoute: 'https://nblreact.wpengine.com/wp-json/acf/v3/event',
+    modalTrigger:null,
+    modalToggle:false
   }
 
   async componentDidMount() {
-    const response = await fetch(this.state.dataRoute);
+    const response = await fetch(this.state.dataRoute,{});
     const json = await response.json();
 
     console.log(json);
+    console.log(Object.values(json));
 
     let myEvent = json.map((day, i) => {
       let daysArr = day.acf.day;
@@ -54,27 +57,22 @@ class App extends Component {
 
   componentDidUpdate() {
     console.log('hi');
-
-
   }
 
-  // <div class="agenda-item agenda-item-cp">
-  //   <div class="agenda-item-time">1:15 - 2:15
-  //     <div class="agenda-item-stamp">KEYNOTE</div>
-  //   </div>
+  showModalHandler = (abstract) =>{
+    console.log(abstract);
+    this.setState({
+      modalTrigger: abstract,
+      modalToggle: true
+    })
+  }
 
-  //   <div class="agenda-item-desc">
-  //     <div class="agenda-item-desc-title">
-  //       Build Greater Intimacy with Clients and Profit from ROR: Return on Relationship
-  //       <span data-target="#kn-ted-modal" data-toggle="modal"><img class="show-bio agenda-expand-nba" src="http://www.netbaselive.com/wp-content/uploads/2017/06/dropdown.svg" width="17" height="9"></span>
-  //         <div class="agenda-item-speaker">
-  //           <span class="agenda-item-speaker-name">Ted Rubin</span>, Social Marketing Strategist, Keynote Speaker, CMO of Photofy</div>
-  //     </div>
-
-
-  //     </div>
-
-  //   </div>
+  closeModalHandler = () =>{
+    this.setState({
+      modalTrigger: null,
+      modalToggle: false
+    })
+  }
 
   render() {
     console.log(this.state.events);
@@ -91,8 +89,19 @@ class App extends Component {
                 return (
                   <div className="agenda-item-desc-title" key={session.session_title}>
                     <p>{session.session_title}</p>
-                    <span data-target="#nbas-putting-analysis-modal" data-toggle="modal"><img className="show-bio agenda-expand-nba" src="http://www.netbaselive.com/wp-content/uploads/2017/06/dropdown.svg" width="17" height="9" /></span>
+                    <span onClick={() => this.showModalHandler(session.session_title)}><img className="show-bio agenda-expand-nba" src="http://www.netbaselive.com/wp-content/uploads/2017/06/dropdown.svg" width="17" height="9" /></span>
+                    <Modal show={this.state.modalToggle} modalTrigger={this.state.modalTrigger} target={session.session_title} closeModal={this.closeModalHandler}>
+                      {session.session_speakers.map((speaker, i) => {
+                        return (
+                          <div key={speaker.name + i}>
+                            <img src={speaker.headshot} alt={speaker.name}/>
+                            <p>{speaker.name}, {speaker.company_title}, {speaker.company}</p>
+
+                          </div>
+                        )
+                      })}
                     <p><strong>Abstract: </strong>{session.session_abstract}</p>
+                    </Modal>
                     {session.session_speakers.map((speaker, i) => {
                       return (
                         <div key={speaker.name + i}>
